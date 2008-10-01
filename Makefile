@@ -87,7 +87,7 @@ LPR	= lpr -p
 
 # Program names
 #
-PROGS	= detex
+PROGS	= detex delatex
 
 # Header files
 #
@@ -106,7 +106,10 @@ all:	${PROGS}
 detex: ${D_OBJ}
 	${CC} ${CFLAGS} -o $@ ${D_OBJ} ${LEXLIB}
 
-detex.c:
+delatex: detex
+	cp detex delatex
+
+detex.c: detex.l
 	sed -f states.sed detex.l > xxx.l
 	${LEX} ${LFLAGS} xxx.l
 	rm -f xxx.l
@@ -126,13 +129,17 @@ install: detex
 #	rm -f ${DESTDIR}/delatex
 #	ln ${DESTDIR}/detex ${DESTDIR}/delatex
 	sudo install detex /usr/local/bin
+	sudo install detex /usr/local/bin/delatex
 
 clean:
 	-rm -f a.out core *.s *.o ERRS errs .,* .emacs_[0-9]*
-	-rm -f ${PROGS} xxx.l lex.yy.c
+	-rm -f ${PROGS} xxx.l lex.yy.c lexout.c detex.c
 
 print:	${HDR} ${SRC}
 	${LPR} Makefile ${HDR} ${SRC}
+
+testing:
+	./test.pl
 
 # Dependencies
 #

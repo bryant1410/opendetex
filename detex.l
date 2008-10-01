@@ -115,6 +115,7 @@ int	fFollow = 1;			/* flag to follow input/include */
 int	fCite = 0;			/* flag to echo \cite and \ref args */
 int	fSpace = 0;			/* flag to replace \cs with space */
 int	fForcetex = 0;			/* flag to inhibit latex mode */
+int fShowPictures = 0;  /* flag to show picture names */
 
 #ifdef FLEX_SCANNER
 /* flex has contexts for buffers that need to be switched when file changes
@@ -165,7 +166,23 @@ Z	\*?
 						  IGNORE;
 						}
 
-<LaBegin>{W}					{   if (BeginEnv(yytext))
+<LaBegin>{S}"{"{S}"table"{S}"}"{S}"["{W}"]"		{
+						  if (BeginEnv("table"))
+							BEGIN LaEnv;
+						  else
+							BEGIN Normal;
+						  IGNORE;
+						}
+
+<LaBegin>{S}"{"{S}"figure"{S}"}"{S}"["{W}"]"		{
+						  if (BeginEnv("figure"))
+							BEGIN LaEnv;
+						  else
+							BEGIN Normal;
+						  IGNORE;
+						}
+						
+<LaBegin>{W}					{ if (BeginEnv(yytext))
 							BEGIN LaEnv;
 						    else
 							BEGIN Normal;
@@ -212,7 +229,7 @@ Z	\*?
 <Normal>"\\includegraphics"[^{]*		{ LaBEGIN LaPicture; }
 
 <LaPicture>"{"					;
-<LaPicture>[^{}]+				{ printf("<Picture %s>", yytext); }
+<LaPicture>[^{}]+				{ if(fShowPictures) { printf("<Picture %s>", yytext); } }
 <LaPicture>"\}"					BEGIN Normal;
 
 <Normal>"\\definecolor"				{ KILLARGS(3); }
@@ -244,6 +261,7 @@ Z	\*?
 <Normal>"\\index"				{KILLARGS(1); SPACE;}
 <Normal>"\\footnote"				{KILLARGS(1); SPACE;}
 <Normal>"\\label"				{KILLARGS(1); IGNORE;}
+<Normal>"\\nameref"					{CITE(1); IGNORE;}
 <Normal>"\\pageref"				{CITE(1); IGNORE;}
 <Normal>"\\pagestyle"				{KILLARGS(1); IGNORE;}
 <Normal>"\\ref"					{CITE(1); IGNORE;}
@@ -544,9 +562,16 @@ void SetEnvIgnore(sbEnvList)
 char	*sbEnvList;
 {
 	char *sb;
+	/*int sbLen;
 
+	sbLen = strlen(sbEnvList);
+	sb = SafeMalloc(sbLen + 1, "malloc for SetEnvIgnore failed");
+	strncpy(sb, sbEnvList, sbLen);
+	sb[sbLen+1] = '\0';*/
 	sb = SafeMalloc(strlen(sbEnvList) + 1, "malloc for SetEnvIgnore failed");
 	(void) strcpy(sb, sbEnvList);
+
+	
 	csbEnvIgnore = SeparateList(sb, rgsbEnvIgnore, CHENVSEP, MAXENVS);
 	if (csbEnvIgnore == ERROR)
 	    ErrorExit("The environtment list contains too many environments");
@@ -563,10 +588,10 @@ char	*sbEnv;
 	int	i;
 
 	if (!fLatex) return(0);
-	for (i = 0; i < csbEnvIgnore; i++)
+	for (i = 0; i < csbEnvIgnore; ++i)
 	    if (strcmp(sbEnv, rgsbEnvIgnore[i]) == 0) {
-		(void)strcpy(sbCurrentEnv, sbEnv);
-		return(1);
+			(void)strcpy(sbCurrentEnv, sbEnv);
+			return(1);
 	    }
 	return(0);
 }
