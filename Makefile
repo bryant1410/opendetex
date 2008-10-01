@@ -141,6 +141,9 @@ print:	${HDR} ${SRC}
 testing:
 	./test.pl
 
+run: delatex
+	./delatex in > out.txt
+
 # Dependencies
 #
 detex.c: detex.h

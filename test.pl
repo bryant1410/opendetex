@@ -7,6 +7,7 @@ if ($diffResult eq '') {
 	print "Test ok\n";
 	exit(0);
 } else {
-	print "Test failed\n";
+	print "Test failed:\n";
+	print $diffResult;
 	exit(11);
 }

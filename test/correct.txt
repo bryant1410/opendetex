@@ -1,21 +1,31 @@
 
 
-Begin of text. Bold, teletype, small caps etc.
 
-Now hyphenation and "various" "styles" "of" "quotes".
+Begin of text. Bold, teletype, small caps etc.
+Emphasis verb1 verb2
+
+Paragraph
+markup
+commands
+
+Now label and reference and
+another indexing . Also don't show
+cites without, or with space.
+
+Footnotes have to (be shown) also with (numbers
+or
+complex - content).
+
+Now hyphenation and "various" "styles" "of" "quotes" 'more'.
+
+Special characters: test/slash
 
 
 This is minipage.
 
 
 
-	
-	
-	This is figure.
-
-
-
-
+			This is figure.
 
 
 
@@ -28,4 +38,3 @@ Hey, this is sloppypar!
 
 
 Later on
-

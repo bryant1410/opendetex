@@ -117,6 +117,9 @@ int	fSpace = 0;			/* flag to replace \cs with space */
 int	fForcetex = 0;			/* flag to inhibit latex mode */
 int fShowPictures = 0;  /* flag to show picture names */
 
+int currBracesLevel = 0;
+int footnoteLevel = -100;
+
 #ifdef FLEX_SCANNER
 /* flex has contexts for buffers that need to be switched when file changes
  * otherwise output contains imported files in reverse order.  Weird, but
@@ -143,11 +146,11 @@ Z	\*?
 %%
 <Normal>"%".*		/* ignore comments */	;
 
-<Normal>"\\begin"{S}"{"{S}"document"{S}"}"	{LATEX; IGNORE;}
+<Normal>"\\begin"{S}"{"{S}"document"{S}"}""\n"*	{LATEX; IGNORE;}
 
 <Normal>"\\begin"     /* environment start */	{LaBEGIN LaBegin; IGNORE;}
 
-<LaBegin>{S}"{"{S}"verbatim"{S}"}"		{   if (BeginEnv("verbatim"))
+<LaBegin>{S}"{"{S}"verbatim"{S}"}"		{ if (BeginEnv("verbatim"))
 							BEGIN LaEnv;
 						    else
 							BEGIN LaVerbatim;
@@ -188,11 +191,11 @@ Z	\*?
 							BEGIN Normal;
 						    IGNORE;
 						}
-<LaBegin>"\n"					NEWLINE;
+	/*<LaBegin>"\n"					NEWLINE;*/
 <LaBegin>.					;
 
 <LaEnv>"\\end"  /* absorb some environments */	{LaBEGIN LaEnd; IGNORE;}
-<LaEnv>"\n"					NEWLINE;
+<LaEnv>"\n"+					;//NEWLINE;
 <LaEnv>.					;
 
 <LaEnd>{W}		 /* end environment */	{   if (EndEnv(yytext))
@@ -200,7 +203,7 @@ Z	\*?
 						    IGNORE;
 						}
 <LaEnd>"}"					{BEGIN LaEnv; IGNORE;}
-<LaEnd>"\n"					NEWLINE;
+	/*<LaEnd>"\n"					NEWLINE;*/
 <LaEnd>.					;
 
 <Normal>"\\vskip"{D}				;
@@ -230,6 +233,7 @@ Z	\*?
 
 <LaPicture>"{"					;
 <LaPicture>[^{}]+				{ if(fShowPictures) { printf("<Picture %s>", yytext); } }
+<LaPicture>"\}"{S}"\n"+					BEGIN Normal;
 <LaPicture>"\}"					BEGIN Normal;
 
 <Normal>"\\definecolor"				{ KILLARGS(3); }
@@ -243,35 +247,42 @@ Z	\*?
 <Normal>"\\thispagestyle"			{ KILLARGS(1); }
 <Normal>"\\addcontentsline"			{ KILLARGS(3); }
 
-<Normal>"\\part"{Z}				;
-<Normal>"\\section"{Z}				;
-<Normal>"\\subsection"{Z}			;
-<Normal>"\\subsubsection"{Z}			;
-<Normal>"\\paragraph"{Z}			;
-<Normal>"\\sunparagraph"{Z}			;
+<Normal>"\\part"{Z}					NEWLINE;
+<Normal>"\\chapter"{Z}				NEWLINE;
+<Normal>"\\section"{Z}				NEWLINE;
+<Normal>"\\subsection"{Z}			NEWLINE;
+<Normal>"\\subsubsection"{Z}		NEWLINE;
+<Normal>"\\paragraph"{Z}			NEWLINE;
+<Normal>"\\subparagraph"{Z}			NEWLINE;
 
 <Normal>"\\bibitem"	    /* ignore args  */	{KILLARGS(1); IGNORE;}
 <Normal>"\\bibliography"    /* of these \cs */	{KILLARGS(1); IGNORE;}
 <Normal>"\\bibstyle"				{KILLARGS(1); IGNORE;}
-<Normal>"\\cite"				{CITE(1); IGNORE;}
+<Normal>" "?"\\cite"				{KILLARGS(1);} /* kill space before */
 <Normal>"\\documentstyle"			{LATEX; KILLARGS(1); IGNORE;}
 <Normal>"\\documentclass"			{LATEX; KILLARGS(1); IGNORE;}
 <Normal>"\\usepackage"				{KILLARGS(1); IGNORE;}
 <Normal>"\\end"					{KILLARGS(1); IGNORE;}
-<Normal>"\\index"				{KILLARGS(1); SPACE;}
-<Normal>"\\footnote"				{KILLARGS(1); SPACE;}
+<Normal>"\\index"				{KILLARGS(1);}
+	/*<Normal>"\\footnote"				{KILLARGS(1); SPACE;}*/
 <Normal>"\\label"				{KILLARGS(1); IGNORE;}
 <Normal>"\\nameref"					{CITE(1); IGNORE;}
 <Normal>"\\pageref"				{CITE(1); IGNORE;}
 <Normal>"\\pagestyle"				{KILLARGS(1); IGNORE;}
 <Normal>"\\ref"					{CITE(1); IGNORE;}
-<Normal>"\\setcounter"				{KILLARGS(1); IGNORE;}
+<Normal>"\\setcounter"				{KILLARGS(2); IGNORE;}
+<Normal>"\\footnote"(\[([^\]])+\])?"{"		{
+							putchar('(');
+							footnoteLevel = currBracesLevel;
+							++currBracesLevel;
+							}
 <Normal>"\\verb" /* ignore \verb<ch>...<ch> */	{   if (fLatex) {
 						 	char verbchar, c;
 						 	verbchar = input();
 						 	while ((c = input()) != verbchar)
-							    if (c == '\n')
-								NEWLINE;
+							    /*if (c == '\n')
+								NEWLINE;*/
+								putchar(c);
 						    }
 						    IGNORE;
 						}
@@ -310,7 +321,7 @@ Z	\*?
 <LaInclude>[^{ \t\n}]+				{   IncludeFile(yytext);
 						    BEGIN Normal;
 						}
-<LaInclude>"\n"					NEWLINE;
+<LaInclude>"\n"+					NEWLINE;
 <LaInclude>.					;
 
 <Normal>"\\includeonly"				{BEGIN IncludeOnly; IGNORE;}
@@ -319,51 +330,67 @@ Z	\*?
 							rgsbIncList[csbIncList++] = '\0';
 						    BEGIN Normal;
 						}
-<IncludeOnly>"\n"				NEWLINE;
+<IncludeOnly>"\n"+				NEWLINE;
 <IncludeOnly>.					;
 
 <Normal>"\\input"				{BEGIN Input; IGNORE;}
 <Input>[^{ \t\n}]+				{   InputFile(yytext);
 						    BEGIN Normal;
 						}
-<Input>"\n"					NEWLINE;
+<Input>"\n"+					NEWLINE;
 <Input>.					;
+
+	/* escaping commands */
+<Normal>"\\slash"			putchar('/');
 
 <Normal>\\(aa|AA|ae|AE|oe|OE|ss)[ \t]*[ \t\n}] /* handle ligatures */	{(void)printf("%.2s", yytext+1);}
 <Normal>\\[OoijLl][ \t]*[ \t\n}]		{(void)printf("%.1s", yytext+1);}
-<Normal>"\\linebreak"				BEGIN LaBreak;
+<Normal>"\\linebreak"(\[[0-4]\])?			{NEWLINE;}	/*BEGIN LaBreak;*/
 
 <Normal>\\[a-zA-Z@]+	/* ignore other \cs */	{BEGIN Control; IGNORE;}
 <Normal>"\\ "					SPACE;
 <Normal>"\\\\"{Z}(\[[^\]]*\])?			NEWLINE;
 <Normal>\\.					IGNORE;
 <LaBreak>[0-4]?					{  if (yytext==NULL || strlen(yytext)==0
-							|| atoi(yytext)==4)
+							|| atoi(yytext)>=0)
 							NEWLINE;
 						BEGIN Normal;
 						}
 
 <Control>\\[a-zA-Z@]+				IGNORE;
 <Control>[a-zA-Z@0-9]*[-'=`][^ \t\n{]*		IGNORE;
-<Control>"\n"					{BEGIN Normal; NEWLINE;}
-<Control>[ \t]*[{]*				{BEGIN Normal; IGNORE;}
+<Control>"\n"+					{BEGIN Normal; /*NEWLINE;*/}
+<Control>[ \t]*[{]+				{++currBracesLevel;BEGIN Normal; IGNORE;}
+<Control>[ \t]*				{BEGIN Normal; IGNORE;}
 <Control>.					{yyless(0);BEGIN Normal;}
 
-<Normal>[{}\\|]	/* special characters */	IGNORE;
-<Normal>[!?]"`"					IGNORE;
+<Normal>[\\|]	/* special characters */	IGNORE;
+<Normal>[!?]"`"				IGNORE;
 <Normal>~					SPACE;
 <Normal>-{2,3}				putchar('-');
 <Normal>``					putchar('"');
+<Normal>`					putchar('\'');
 <Normal>''					putchar('"');
 <Normal>,,					putchar('"');
 
+	/* braces */
+<Normal>"{"					{ ++currBracesLevel;
+							}
+<Normal>"}"					{
+							--currBracesLevel;
+							if (currBracesLevel == footnoteLevel) {
+								putchar(')');
+								footnoteLevel = -100;
+							}
+							IGNORE;}
 <Normal>{W}[']*{W}				{   if (fWord)
 							(void)printf("%s\n", yytext);
 						    else
 							ECHO;
 						}
 <Normal>[0-9]+					if (!fWord) ECHO;
-<Normal>(.|\n)					if (!fWord) ECHO;
+<Normal>.					if (!fWord) ECHO;
+<Normal>"\n"					if (!fWord) NEWLINE;
 <Normal>("\t")+					if (!fWord) putchar('\t');
 
 <LaMacro>"\["					{ BEGIN LaOptArg; }
