@@ -72,6 +72,7 @@ static char	rcsid[] = "$Header: /p/src/local/bin/detex/RCS/detex.l,v 2.22 2007/0
 #define STRIPARGS(x)	cArgs=x; LaBEGIN LaMacro2
 #define	CITE(x)		if (fLatex && !fCite) KILLARGS(x)
 
+#define NO_MALLOC_DECL
 char	*SafeMalloc();
 #ifndef NO_MALLOC_DECL
 char	*malloc();
