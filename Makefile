@@ -101,6 +101,8 @@ SRC	= detex.l
 #
 D_OBJ	= detex.o
 
+VERSION = 2.8.1
+
 all:	${PROGS}
 
 detex: ${D_OBJ}
@@ -143,6 +145,12 @@ testing: all
 
 run: delatex
 	./delatex in > out.txt
+
+package:
+	rm -r /tmp/opendetex
+	svn export http://opendetex.googlecode.com/svn/trunk/ /tmp/opendetex
+	tar cjfv opendetex-${VERSION}.tar.bz2 /tmp/opendetex
+	rm -r /tmp/opendetex
 
 # Dependencies
 #
