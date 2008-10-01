@@ -14,7 +14,7 @@ First
 Something
 
 Begin of text. Bold, teletype, small caps etc.
-Emphasis verb1 verb2
+Emphasis verb1 - or - verb2
 
 Now label and reference and
 another indexing . Also don't show
