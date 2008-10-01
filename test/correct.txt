@@ -1,12 +1,20 @@
 
 
 
+
+
+
+
+
+
+
+First
+
+
+Something
+
 Begin of text. Bold, teletype, small caps etc.
 Emphasis verb1 verb2
-
-Paragraph
-markup
-commands
 
 Now label and reference and
 another indexing . Also don't show
@@ -20,21 +28,16 @@ Now hyphenation and "various" "styles" "of" "quotes" 'more'.
 
 Special characters: test/slash
 
-
 This is minipage.
-
-
 
 			This is figure.
 
 
-
-
 This is table.
 
-
-
 Hey, this is sloppypar!
-
+Paragraph
+markup
+commands
 
 Later on

@@ -1,13 +1,34 @@
-\documentclass[draft]{article}
+\documentclass[draft]{book}
+\usepackage{makeidx}
+\usepackage[pdftex]{hyperref}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\newcommand{\sidebox}[1]{ %
+	\marginpar{#1}
+}
+\newenvironment{uwaga}{%
+  \def\FrameCommand{\fboxsep=\FrameSep \colorbox{uwagacolor}}%
+  \MakeFramed {\FrameRestore}}%
+ {\endMakeFramed}
+\definecolor{urlcolor}{rgb}{0.27,0.51,0.71}
+\hypersetup{pdftitle={C},
+	pdfauthor={auth},
+	pdfsubject={some subj},
+	pdfkeywords={keywords},
+	colorlinks=true,
+}
 \begin{document}
 
 \tableofcontents
 \setcounter{page}{2142}
 
+\chapter*{First}
+
+\subparagraph*{Something}
+
 Begin of~text. \textbf{Bold}, \texttt{teletype}, \textsc{small caps} etc.
 \emph{Emphasis} \verb+verb1+ \verb!verb2!
-
-Paragraph\linebreak[3]markup\linebreak{}commands
 
 Now label\label{notShown} and reference\ref{notShown} and
 another\pageref{notShown} indexing \index{notShown}. Also don't show
@@ -20,7 +41,7 @@ Now hy\-phe\-na\-tion and ,,various'' ,,styles" ``of'' ``quotes" `more'.
 
 Special characters: test\slash{}slash
 
-\begin{minipage}
+\begin{minipage}[t]{0.5\textwidth}
 This is minipage.
 \end{minipage}
 
@@ -42,6 +63,8 @@ B & 4 & A \\ \hline
 \begin{sloppypar}
 Hey, this is sloppypar!
 \end{sloppypar}
+
+Paragraph\linebreak[3]markup\linebreak{}commands
 
 Later on\ldots
 

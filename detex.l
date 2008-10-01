@@ -165,7 +165,7 @@ Z	\*?
 						  if (BeginEnv("minpage"))
 							BEGIN LaEnv;
 						  else
-							BEGIN Normal;
+							BEGIN LaMacro; // Normal;
 						  IGNORE;
 						}
 
@@ -263,6 +263,7 @@ Z	\*?
 <Normal>"\\documentclass"			{LATEX; KILLARGS(1); IGNORE;}
 <Normal>"\\usepackage"				{KILLARGS(1); IGNORE;}
 <Normal>"\\end"					{KILLARGS(1); IGNORE;}
+<Normal>"\\hypersetup"			{KILLARGS(1);}
 <Normal>"\\index"				{KILLARGS(1);}
 	/*<Normal>"\\footnote"				{KILLARGS(1); SPACE;}*/
 <Normal>"\\label"				{KILLARGS(1); IGNORE;}
@@ -395,7 +396,7 @@ Z	\*?
 
 <LaMacro>"\["					{ BEGIN LaOptArg; }
 <LaMacro>"{"					{ cOpenBrace++; }
-<LaMacro>"}"					{   cOpenBrace--;
+<LaMacro>"}""\n"*					{   cOpenBrace--;
 						    if (cOpenBrace == 0)
 						    {
 							if (--cArgs==0)
