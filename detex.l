@@ -73,6 +73,7 @@ static char	rcsid[] = "$Header: /p/src/local/bin/detex/RCS/detex.l,v 2.22 2007/0
 #define	CITE(x)		if (fLatex && !fCite) KILLARGS(x)
 
 #define NO_MALLOC_DECL
+
 char	*SafeMalloc();
 #ifndef NO_MALLOC_DECL
 char	*malloc();
@@ -80,6 +81,21 @@ char	*malloc();
 #ifdef OS2
 void	yyless(int);
 #endif
+
+int BeginEnv(char*);
+int EndEnv(char*);
+void InputFile(char*);
+void IncludeFile(char*);
+void AddInclude(char*);
+void SetEnvIgnore(char*);
+void SetInputPaths(void);
+int InList(char*);
+int SeparateList(char*, char**, char, int);
+FILE* TexOpen(char*);
+char* SafeMalloc(int,char*);
+void Warning(char*,char*);
+void ErrorExit(char*);
+void UsageExit(void);
 
 char	*rgsbEnvIgnore[MAXENVS];	/* list of environments ignored */
 char	*rgsbIncList[MAXINCLIST];	/* list of includeonly files */
@@ -175,6 +191,7 @@ Z	\*?
 <Normal>"\\hskip"{D}				;
 <Normal>"\\hspace"{Z}{S}"{"{D}"}"		;
 <Normal>"\\addvspace"{S}"{"{D}"}"		;
+<Normal>"{"{N}"pt}"						; /* hack to fix \begin{minipage}{300pt} */
 
 <Normal>"\\newlength"				{ KILLARGS(1); }
 <Normal>"\\setlength"				{ KILLARGS(2); }
@@ -205,6 +222,9 @@ Z	\*?
 <Normal>"\\fcolorbox"				{ KILLARGS(3); }
 <Normal>"\\pagecolor"				{ KILLARGS(1); }
 <Normal>"\\foilhead"				{ STRIPARGS(1); }
+<Normal>"\\addfontfeature"			{ KILLARGS(1); }
+<Normal>"\\thispagestyle"			{ KILLARGS(1); }
+<Normal>"\\addcontentsline"			{ KILLARGS(3); }
 
 <Normal>"\\part"{Z}				;
 <Normal>"\\section"{Z}				;
@@ -314,6 +334,10 @@ Z	\*?
 <Normal>[{}\\|]	/* special characters */	IGNORE;
 <Normal>[!?]"`"					IGNORE;
 <Normal>~					SPACE;
+<Normal>-{2,3}				putchar('-');
+<Normal>``					putchar('"');
+<Normal>''					putchar('"');
+<Normal>,,					putchar('"');
 
 <Normal>{W}[']*{W}				{   if (fWord)
 							(void)printf("%s\n", yytext);
@@ -322,6 +346,7 @@ Z	\*?
 						}
 <Normal>[0-9]+					if (!fWord) ECHO;
 <Normal>(.|\n)					if (!fWord) ECHO;
+<Normal>("\t")+					if (!fWord) putchar('\t');
 
 <LaMacro>"\["					{ BEGIN LaOptArg; }
 <LaMacro>"{"					{ cOpenBrace++; }
@@ -352,6 +377,7 @@ Z	\*?
 <LaOptArg2>"\]"					BEGIN LaMacro2;	
 <LaOptArg2>.					;
 %%
+
 /******
 ** main --
 **	Set sbProgName to the base of arg 0.
@@ -369,7 +395,7 @@ Z	\*?
 **	If no input files are specified on the command line, process stdin.
 ******/
 
-main(cArgs,rgsbArgs)
+int main(cArgs,rgsbArgs)
 int	cArgs;
 char	*rgsbArgs[];
 {
@@ -428,13 +454,10 @@ char	*rgsbArgs[];
 			fWord = 1;
 			break;
 		    default:
-#ifdef OS2
-			OS2UsageExit();
-#else
 			sbBadOpt[0] = *pch;
 			sbBadOpt[1] = '\0';
 			Warning("unknown option ignored -", sbBadOpt);
-#endif
+			UsageExit();
 		    }
 		iArgs++;
 	}
@@ -478,7 +501,7 @@ char	*rgsbArgs[];
 **	return the termination signal for lex.
 ******/
 
-yywrap()
+int yywrap()
 {
 	(void)fclose(yyin);
 #ifdef FLEX_SCANNER
@@ -517,7 +540,7 @@ int n;
 **	sbEnvList.
 ******/
 
-SetEnvIgnore(sbEnvList)
+void SetEnvIgnore(sbEnvList)
 char	*sbEnvList;
 {
 	char *sb;
@@ -534,7 +557,7 @@ char	*sbEnvList;
 **	is, sbCurrentEnv is set to sbEnv.
 ******/
 
-BeginEnv(sbEnv)
+int BeginEnv(sbEnv)
 char	*sbEnv;
 {
 	int	i;
@@ -552,7 +575,7 @@ char	*sbEnv;
 ** EndEnv -- checks to see if sbEnv is the current environment being ignored.
 ******/
 
-EndEnv(sbEnv)
+int EndEnv(sbEnv)
 char	*sbEnv;
 {
 	if (!fLatex) return(0);
@@ -566,7 +589,7 @@ char	*sbEnv;
 **	the sbFile is ignored.
 ******/
 
-InputFile(sbFile)
+void InputFile(sbFile)
 char	*sbFile;
 {
 	FILE	*TexOpen();
@@ -590,7 +613,7 @@ char	*sbFile;
 **	and open sbFile.  If the open fails, the sbFile is ignored.
 ******/
 
-IncludeFile(sbFile)
+void IncludeFile(sbFile)
 char	*sbFile;
 {
 	FILE	*TexOpen();
@@ -616,7 +639,7 @@ char	*sbFile;
 **	If the include list is too long, sbFile is ignored.
 ******/
 
-AddInclude(sbFile)
+void AddInclude(sbFile)
 char	*sbFile;
 {
 	if (!fFollow)
@@ -632,7 +655,7 @@ char	*sbFile;
 **	no list, all files are assumed to be "in the list".
 ******/
 
-InList(sbFile)
+int InList(sbFile)
 char	*sbFile;
 {
 	char	*pch, sbBase[MAXPATHLEN];
@@ -659,7 +682,7 @@ char	*sbFile;
 **	routine does not honor the '//' construct (expand subdirs).
 ******/
 
-SetInputPaths()
+void SetInputPaths(void)
 {
 	char *sb, *sbPaths, *getenv();
 	int cchDefaults, cchPaths;
@@ -699,7 +722,7 @@ SetInputPaths()
 **	ERROR is returned if there are more than csbMax words.
 ******/
 
-SeparateList(sbList, rgsbList, chSep, csbMax)
+int SeparateList(sbList, rgsbList, chSep, csbMax)
 char	*sbList, *rgsbList[], chSep;
 int	csbMax;
 {
@@ -707,8 +730,9 @@ int	csbMax;
 
 	while (sbList && *sbList && csbList < csbMax) {
 	    rgsbList[csbList++] = sbList;
-	    if (sbList = index(sbList, chSep))
-		*sbList++ = '\0';
+	    if ((sbList = index(sbList, chSep))) {
+			*sbList++ = '\0';
+		}
 	}
 	return(sbList && *sbList ? ERROR : csbList);
 }
@@ -800,7 +824,7 @@ char *sbMessage;
 ** Warning -- print a warning message preceded by the program name.
 ******/
 
-Warning(sb1, sb2)
+void Warning(sb1, sb2)
 char	*sb1, *sb2;
 {
 	(void)fprintf(stderr, "%s: warning: %s %s\n", sbProgName, sb1, sb2);
@@ -811,20 +835,19 @@ char	*sb1, *sb2;
 **	Stdout is flushed and detex exits.
 ******/
 
-ErrorExit(sb1)
+void ErrorExit(sb1)
 char	*sb1;
 {
 	(void)fflush(stdout);
 	(void)fprintf(stderr, "%s: error: %s\n", sbProgName, sb1);
 	exit(1);
 }
-#ifdef OS2
 
 /******
-** OS2UsageExit -- print OS/2 usage message and exit.
+** UsageExit -- print OS/2 usage message and exit.
 ******/
 
-OS2UsageExit()
+void UsageExit(void)
 {
 	(void)printf("\n%s [ -clnstw ] [ -e environment-list ] [ filename[.tex] ... ]\n",
 		sbProgName);
@@ -837,4 +860,3 @@ OS2UsageExit()
 -w  word only output");
 	exit(0);
 }
-#endif

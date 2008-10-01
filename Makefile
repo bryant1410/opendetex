@@ -69,7 +69,7 @@ DEFS	=
 #
 #DEFS	+= ${DEFS} -DNO_MALLOC_DECL
 #
-CFLAGS	= -O ${DEFS}
+CFLAGS	= -O ${DEFS} -Wall
 
 # Use your favorite lexical scanner
 #
@@ -121,10 +121,11 @@ man-page:
 # If you want detex available as delatex, uncomment the last two lines of
 # this target
 install: detex
-	rm -f ${DESTDIR}/detex
-	install -c -m 775 -o binary -g staff -s detex ${DESTDIR}
+#	rm -f ${DESTDIR}/detex
+#	install -c -m 775 -o binary -g staff -s detex ${DESTDIR}
 #	rm -f ${DESTDIR}/delatex
 #	ln ${DESTDIR}/detex ${DESTDIR}/delatex
+	sudo install detex /usr/local/bin
 
 clean:
 	-rm -f a.out core *.s *.o ERRS errs .,* .emacs_[0-9]*
