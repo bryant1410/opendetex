@@ -147,10 +147,10 @@ run: delatex
 	./delatex in > out.txt
 
 package:
-	rm -fr /tmp/opendetex
-	svn export http://opendetex.googlecode.com/svn/trunk/ /tmp/opendetex
-	tar cjfv opendetex-${VERSION}.tar.bz2 /tmp/opendetex
-	rm -fr /tmp/opendetex
+	rm -fr opendetex/
+	svn export http://opendetex.googlecode.com/svn/trunk/ opendetex/
+	tar cjfv opendetex-${VERSION}.tar.bz2 opendetex/
+	rm -fr opendetex/
 
 # Dependencies
 #
