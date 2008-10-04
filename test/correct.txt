@@ -10,9 +10,9 @@
 
 First
 
+Between
 
 Something
-
 Begin of text. Bold, teletype, small caps etc.
 Emphasis verb1 - or - verb2
 
@@ -30,12 +30,16 @@ Special characters: test/slash
 
 This is minipage.
 
+
 			This is figure.
+
 
 
 This is table.
 
+
 Hey, this is sloppypar!
+
 Paragraph
 markup
 commands

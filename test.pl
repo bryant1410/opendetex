@@ -8,6 +8,7 @@ if ($diffResult eq '') {
 	exit(0);
 } else {
 	print "Test failed:\n";
-	print $diffResult;
+	#print $diffResult;
+	`kdiff3 test/correct.txt /tmp/testDelatex.txt`;
 	exit(11);
 }

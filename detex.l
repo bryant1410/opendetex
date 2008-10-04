@@ -247,13 +247,13 @@ Z	\*?
 <Normal>"\\thispagestyle"			{ KILLARGS(1); }
 <Normal>"\\addcontentsline"			{ KILLARGS(3); }
 
-<Normal>"\\part"{Z}					NEWLINE;
-<Normal>"\\chapter"{Z}				NEWLINE;
-<Normal>"\\section"{Z}				NEWLINE;
-<Normal>"\\subsection"{Z}			NEWLINE;
-<Normal>"\\subsubsection"{Z}		NEWLINE;
-<Normal>"\\paragraph"{Z}			NEWLINE;
-<Normal>"\\subparagraph"{Z}			NEWLINE;
+<Normal>"\\part"{Z}					;//NEWLINE;
+<Normal>"\\chapter"{Z}				;//NEWLINE;
+<Normal>"\\section"{Z}				;//NEWLINE;
+<Normal>"\\subsection"{Z}			;//NEWLINE;
+<Normal>"\\subsubsection"{Z}		;//NEWLINE;
+<Normal>"\\paragraph"{Z}			;//NEWLINE;
+<Normal>"\\subparagraph"{Z}			;//NEWLINE;
 
 <Normal>"\\bibitem"	    /* ignore args  */	{KILLARGS(1); IGNORE;}
 <Normal>"\\bibliography"    /* of these \cs */	{KILLARGS(1); IGNORE;}
@@ -396,7 +396,7 @@ Z	\*?
 
 <LaMacro>"\["					{ BEGIN LaOptArg; }
 <LaMacro>"{"					{ cOpenBrace++; }
-<LaMacro>"}""\n"*					{   cOpenBrace--;
+<LaMacro>"}""\n"{0,1}					{   cOpenBrace--;
 						    if (cOpenBrace == 0)
 						    {
 							if (--cArgs==0)
