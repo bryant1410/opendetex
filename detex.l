@@ -165,7 +165,7 @@ Z	\*?
 						  if (BeginEnv("minpage"))
 							BEGIN LaEnv;
 						  else
-							BEGIN LaMacro; // Normal;
+							BEGIN LaMacro; /* Normal; */
 						  IGNORE;
 						}
 
@@ -195,7 +195,7 @@ Z	\*?
 <LaBegin>.					;
 
 <LaEnv>"\\end"  /* absorb some environments */	{LaBEGIN LaEnd; IGNORE;}
-<LaEnv>"\n"+					;//NEWLINE;
+<LaEnv>"\n"+					;/*NEWLINE;*/
 <LaEnv>.					;
 
 <LaEnd>{W}		 /* end environment */	{   if (EndEnv(yytext))
@@ -247,13 +247,13 @@ Z	\*?
 <Normal>"\\thispagestyle"			{ KILLARGS(1); }
 <Normal>"\\addcontentsline"			{ KILLARGS(3); }
 
-<Normal>"\\part"{Z}					;//NEWLINE;
-<Normal>"\\chapter"{Z}				;//NEWLINE;
-<Normal>"\\section"{Z}				;//NEWLINE;
-<Normal>"\\subsection"{Z}			;//NEWLINE;
-<Normal>"\\subsubsection"{Z}		;//NEWLINE;
-<Normal>"\\paragraph"{Z}			;//NEWLINE;
-<Normal>"\\subparagraph"{Z}			;//NEWLINE;
+<Normal>"\\part"{Z}					;/*NEWLINE;*/
+<Normal>"\\chapter"{Z}				;/*NEWLINE;*/
+<Normal>"\\section"{Z}				;/*NEWLINE;*/
+<Normal>"\\subsection"{Z}			;/*NEWLINE;*/
+<Normal>"\\subsubsection"{Z}		;/*NEWLINE;*/
+<Normal>"\\paragraph"{Z}			;/*NEWLINE;*/
+<Normal>"\\subparagraph"{Z}			;/*NEWLINE;*/
 
 <Normal>"\\bibitem"	    /* ignore args  */	{KILLARGS(1); IGNORE;}
 <Normal>"\\bibliography"    /* of these \cs */	{KILLARGS(1); IGNORE;}
@@ -272,6 +272,9 @@ Z	\*?
 <Normal>"\\pagestyle"				{KILLARGS(1); IGNORE;}
 <Normal>"\\ref"					{CITE(1); IGNORE;}
 <Normal>"\\setcounter"				{KILLARGS(2); IGNORE;}
+
+<Normal>"\\fontspec"			{KILLARGS(1);}
+
 <Normal>"\\footnote"(\[([^\]])+\])?"{"		{
 							putchar('(');
 							footnoteLevel = currBracesLevel;

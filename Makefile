@@ -112,9 +112,9 @@ delatex: detex
 	cp detex delatex
 
 detex.c: detex.l
-	sed -f states.sed detex.l > xxx.l
-	${LEX} ${LFLAGS} xxx.l
-	rm -f xxx.l
+	sed -f states.sed detex.l > detex-temp.l
+	${LEX} ${LFLAGS} detex-temp.l
+	rm -f detex-temp.l
 	mv lex.yy.c detex.c
 
 lexout.c: detex.c
@@ -126,12 +126,10 @@ man-page:
 # If you want detex available as delatex, uncomment the last two lines of
 # this target
 install: detex
-#	rm -f ${DESTDIR}/detex
-#	install -c -m 775 -o binary -g staff -s detex ${DESTDIR}
+	rm -f ${DESTDIR}/detex
+	install -c -m 775 -g staff -s detex ${DESTDIR}
 #	rm -f ${DESTDIR}/delatex
 #	ln ${DESTDIR}/detex ${DESTDIR}/delatex
-	sudo install detex /usr/local/bin
-	sudo install detex /usr/local/bin/delatex
 
 clean:
 	-rm -f a.out core *.s *.o ERRS errs .,* .emacs_[0-9]*
@@ -156,3 +154,4 @@ package:
 #
 detex.c: detex.h
 detex.c: detex.l
+

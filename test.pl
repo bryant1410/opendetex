@@ -9,6 +9,13 @@ if ($diffResult eq '') {
 } else {
 	print "Test failed:\n";
 	#print $diffResult;
-	`kdiff3 test/correct.txt /tmp/testDelatex.txt`;
+	my $compared = "test/correct.txt /tmp/testDelatex.txt";
+	if (`which kdiff3`) {
+		system("kdiff3 $compared");
+	} elsif (`which vimdiff`) {
+		system("vimdiff $compared");
+	} else {
+		system("diff -u $compared");
+	}
 	exit(11);
 }
